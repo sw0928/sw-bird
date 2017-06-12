@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>Document</title>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<script src="./js/Fly.js"></script>
+<script src="./js/Sky.js"></script>
+<script src="./js/land.js"></script>
+<script src="./js/Bird.js"></script>
+<script src="./js/pipe.js"></script>
+<script>
+     var cv = document.getElementById('cv');
+     cv.height = 600;
+     cv.width = 800;
+     cv.style.border = '1px solid red';
+     var flag = true;
+     var context = cv.getContext('2d');
+    var imgsArr = ['birds', 'land', 'pipe1', 'pipe2', 'sky'];
+    Fly.loadImages(imgsArr,function (imgList) {  
+  
+      var roles = [ ];
+      var imgsky = imgList.sky;
+      for (var i = 0; i < 2; i++) {
+          var sky = new Fly.Sky({
+            img:imgsky,
+            ctx:context,
+            x:imgsky.width * i
+          });
+            roles.push(sky);
+      };
+      //绘制管道
+      for (var i = 0; i < 6; i++) {
+        var pipe = new Fly.Pipe({
+          imgTop:imgList.pipe2,
+          imgBottom:imgList.pipe1,
+          ctx:context,
+          pipeSpace:100,
+          x:i * imgList.pipe2.width*3 + 300
+        })
+        roles.push(pipe)
+      }
+      //绘制陆地
+      var imgland = imgList.land
+      for (var i = 0; i < 4; i++) {
+        var land = new Fly.Land({
+          img:imgland,
+           ctx:context,
+           x: i* imgland.width,
+           y:imgsky.height - imgland.height
+        })
+        roles.push(land)
+      };
+
+      var bird = new Fly.Bird({
+        img: imgList.birds,
+        ctx: context
+      });
+      
+
+
+      var lastTime = new Date(),
+          interval = 0,
+          curTime;
+
+      (function render() {  
+
+        context.save();
+        context.clearRect(0, 0, cv.width, cv.height);
+        context.beginPath();
+        curTime = new Date();
+        interval = curTime - lastTime;
+        lastTime = curTime
+        
+        roles.forEach(function (role) {  
+          role.draw(interval)
+        });
+
+        bird.draw(interval)
+
+        //碰撞检测
+        if(bird.y <= 0 || bird.y >= (imgsky.height - imgland.height) || context.isPointInPath(bird.x, bird.y)){
+          flag = false;
+        }
+        context.restore();
+        if(flag){
+          requestAnimationFrame(render)
+        }
+     
+        
+      })()
+
+      cv.addEventListener('click',function () {  
+        bird.changeSpeed(-0.25)
+      })
+    }) 
+     
+  
+
+</script>
+</body>
+</html>
